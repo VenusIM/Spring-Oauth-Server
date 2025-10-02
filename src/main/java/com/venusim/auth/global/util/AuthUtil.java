@@ -72,8 +72,6 @@ public class AuthUtil {
         System.out.println(b64);
         byte[] bytes = b64.getBytes(StandardCharsets.UTF_8);
 
-        response.setStatus(HttpServletResponse.SC_OK);
-
         // RFC 권장 캐시 방지 헤더
         response.setHeader("Cache-Control", "no-store");
         response.setHeader("Pragma", "no-cache");

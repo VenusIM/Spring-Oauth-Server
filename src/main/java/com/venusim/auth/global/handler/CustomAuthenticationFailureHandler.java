@@ -38,10 +38,16 @@ public class CustomAuthenticationFailureHandler implements AuthenticationFailure
                         .orElseGet(exception::getMessage);
 
                 status = switch (code) {
-                    case OAuth2ErrorCodes.INVALID_CLIENT -> 401;
+                    case OAuth2ErrorCodes.INVALID_REQUEST,
+                         OAuth2ErrorCodes.INVALID_GRANT,
+                         OAuth2ErrorCodes.UNAUTHORIZED_CLIENT,
+                         OAuth2ErrorCodes.UNSUPPORTED_GRANT_TYPE -> 400;
+                    case OAuth2ErrorCodes.INVALID_CLIENT,
+                         OAuth2ErrorCodes.INVALID_TOKEN,
+                         "user_not_allowed" -> 401;
                     case OAuth2ErrorCodes.ACCESS_DENIED -> 403;
                     case OAuth2ErrorCodes.SERVER_ERROR -> 500;
-                    default -> 400;
+                    default -> 503;
                 };
                 addWwwAuth = OAuth2ErrorCodes.INVALID_CLIENT.equals(code);
             } else {
@@ -59,9 +65,7 @@ public class CustomAuthenticationFailureHandler implements AuthenticationFailure
 
             response.setStatus(status);
 
-            String json = """
-            {"error":"%s","description":"%s"}
-            """.formatted(code, desc);
+            String json = "{\"error\":\"%s\",\"description\":\"%s\"}".formatted(code, desc);
             authUtil.encodeResponse(response, json);
         } catch (Exception e) {
             throw new RuntimeException("Failed to build encrypted token response", e);

@@ -28,8 +28,8 @@ import java.security.cert.Certificate;
 import java.security.interfaces.RSAPrivateKey;
 import java.security.interfaces.RSAPublicKey;
 import java.time.Duration;
-import java.util.*;
-import java.util.stream.Collectors;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * 발급 시: active-alias의 개인키로 RS256 서명, 헤더 alg=RS256, kid=<JWK 썸프린트>.

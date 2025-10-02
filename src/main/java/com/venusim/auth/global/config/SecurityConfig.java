@@ -1,10 +1,14 @@
 package com.venusim.auth.global.config;
 
+import com.venusim.auth.global.converter.CommonVerboseAuthenticationConverter;
+import com.venusim.auth.global.converter.PreValidateClientAuthConverter;
+import com.venusim.auth.global.converter.PreValidateTokenRequestConverter;
+import com.venusim.auth.global.converter.PreValidateValidRequestConverter;
 import com.venusim.auth.global.filter.TokenBodyDecryptFilter;
 import com.venusim.auth.global.handler.CustomAuthenticationFailureHandler;
+import com.venusim.auth.global.handler.CustomAuthenticationSuccessHandler;
 import com.venusim.auth.global.handler.CustomIntrospectionSuccessHandler;
 import com.venusim.auth.global.handler.CustomRevocationSuccessHandler;
-import com.venusim.auth.global.util.PreValidateTokenRequestConverter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
@@ -23,7 +27,6 @@ import org.springframework.security.web.util.matcher.RequestMatcher;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
-import com.venusim.auth.global.handler.CustomAuthenticationSuccessHandler;
 
 import java.time.Duration;
 import java.util.List;
@@ -38,37 +41,55 @@ public class SecurityConfig {
     private final CustomAuthenticationSuccessHandler customAuthenticationSuccessHandler;
     private final CustomIntrospectionSuccessHandler customIntrospectionSuccessHandler;
     private final CustomRevocationSuccessHandler customRevocationSuccessHandler;
+    private final PreValidateTokenRequestConverter preValidateTokenRequestConverter;
+    private final PreValidateValidRequestConverter preValidateValidRequestConverter;
+    private final PreValidateClientAuthConverter preValidateClientAuthConverter;
+    private final CommonVerboseAuthenticationConverter commonVerboseAuthenticationConverter;
 
     @Autowired
-    public SecurityConfig(CustomAuthenticationFailureHandler customAuthenticationFailureHandler, CustomAuthenticationSuccessHandler customAuthenticationSuccessHandler, CustomIntrospectionSuccessHandler customIntrospectionSuccessHandler, CustomRevocationSuccessHandler customRevocationSuccessHandler) {
+    public SecurityConfig(CustomAuthenticationFailureHandler customAuthenticationFailureHandler, CustomAuthenticationSuccessHandler customAuthenticationSuccessHandler,
+                          CustomIntrospectionSuccessHandler customIntrospectionSuccessHandler, CustomRevocationSuccessHandler customRevocationSuccessHandler,
+                          PreValidateTokenRequestConverter preValidateTokenRequestConverter, PreValidateValidRequestConverter preValidateValidRequestConverter, PreValidateClientAuthConverter preValidateClientAuthConverter, CommonVerboseAuthenticationConverter commonVerboseAuthenticationConverter) {
         this.customAuthenticationFailureHandler = customAuthenticationFailureHandler;
         this.customAuthenticationSuccessHandler = customAuthenticationSuccessHandler;
         this.customIntrospectionSuccessHandler = customIntrospectionSuccessHandler;
         this.customRevocationSuccessHandler = customRevocationSuccessHandler;
+        this.preValidateTokenRequestConverter = preValidateTokenRequestConverter;
+        this.preValidateValidRequestConverter = preValidateValidRequestConverter;
+        this.preValidateClientAuthConverter = preValidateClientAuthConverter;
+        this.commonVerboseAuthenticationConverter = commonVerboseAuthenticationConverter;
     }
 
     @Bean
     @Order(1)
-    SecurityFilterChain asSecurity(HttpSecurity http,
-                                   PreValidateTokenRequestConverter preValidateTokenRequestConverter) throws Exception {
+    SecurityFilterChain asSecurity(HttpSecurity http) throws Exception {
 
         OAuth2AuthorizationServerConfigurer authorizationServer = new OAuth2AuthorizationServerConfigurer();
         RequestMatcher asEndpoints = authorizationServer.getEndpointsMatcher();
         http.securityMatcher(asEndpoints);
         OAuth2AuthorizationServerConfiguration.applyDefaultSecurity(http);
 
-        // (4) 토큰 엔드포인트 커스터마이징: 추가 파라미터 사전 검증 Provider 삽입
-        http.getConfigurer(OAuth2AuthorizationServerConfigurer.class)
+        OAuth2AuthorizationServerConfigurer as = http.getConfigurer(OAuth2AuthorizationServerConfigurer.class);
+        RequestMatcher endpoints = as.getEndpointsMatcher();
+        http.securityMatcher(endpoints);
+
+        as
                 .clientAuthentication(oAuth2ClientAuthenticationConfigurer -> oAuth2ClientAuthenticationConfigurer
+                        .authenticationConverters(authenticationConverters -> {
+                            authenticationConverters.add(0, commonVerboseAuthenticationConverter);
+                            authenticationConverters.add(1, preValidateClientAuthConverter);
+                        })
                         .errorResponseHandler(customAuthenticationFailureHandler)
                 ).tokenEndpoint(token -> token
                         .accessTokenRequestConverters(authenticationConverters -> authenticationConverters.add(0, preValidateTokenRequestConverter))
                         .accessTokenResponseHandler(customAuthenticationSuccessHandler)
                         .errorResponseHandler(customAuthenticationFailureHandler)
                 ).tokenIntrospectionEndpoint(introspection -> introspection
+                        .introspectionRequestConverters(authenticationConverters -> authenticationConverters.add(0, preValidateValidRequestConverter))
                         .introspectionResponseHandler(customIntrospectionSuccessHandler)
                         .errorResponseHandler(customAuthenticationFailureHandler)
                 ).tokenRevocationEndpoint(revocation -> revocation
+                        .revocationRequestConverters(authenticationConverters -> authenticationConverters.add(0, preValidateValidRequestConverter))
                         .revocationResponseHandler(customRevocationSuccessHandler)
                         .errorResponseHandler(customAuthenticationFailureHandler)
                 );
@@ -119,6 +140,8 @@ public class SecurityConfig {
     FilterRegistrationBean<TokenBodyDecryptFilter> TokenBodyDecryptFilter(TokenBodyDecryptFilter f) {
         FilterRegistrationBean<TokenBodyDecryptFilter> reg = new FilterRegistrationBean<>(f);
         reg.setOrder(Ordered.HIGHEST_PRECEDENCE);
+        reg.addUrlPatterns("/oauth2/token", "/oauth2/introspect", "/oauth2/revoke");
+        reg.setAsyncSupported(true);
         return reg;
     }
 }

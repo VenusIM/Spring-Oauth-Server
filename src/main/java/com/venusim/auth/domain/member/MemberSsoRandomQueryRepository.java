@@ -1,7 +1,7 @@
 package com.venusim.auth.domain.member;
 
-import com.venusim.auth.domain.member.QMemberSsoRandomEntity;
 import com.querydsl.jpa.impl.JPAQueryFactory;
+import com.venusim.auth.domain.member.QMemberSsoRandomEntity;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
