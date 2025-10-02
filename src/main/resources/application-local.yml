@@ -1,0 +1,61 @@
+server:
+  port: 9000
+
+spring:
+  datasource:
+    hikari:
+      driver-class-name: net.sf.log4jdbc.sql.jdbcapi.DriverSpy
+      jdbc-url: jdbc:log4jdbc:mysql://localhost:6000/test?useSSL=false&serverTimezone=Asia/Seoul&useLegacyDatetimeCode=false
+      username: venusIm
+      password: venusIm!12
+      auto-commit: false
+      connection-test-query: "SELECT 1"
+      keepaliveTime: 30000
+      pool-name: hikari-cp
+      connection-timeout: 30000
+      idle-timeout: 3000000
+      max-lifetime: 3600000
+  data:
+    redis:
+      host: localhost
+      port: 1234
+      password:
+
+
+  jpa:
+    properties:
+      hibernate:
+        jdbc:
+          time_zone: Asia/Seoul
+    hibernate:
+      ddl-auto: none
+
+app:
+  issuer: http://localhost
+  access-token-minutes: 10
+  refresh-token-days: 14
+  jwt-secret: supersecrettestkeywhichislongenough
+  jwt:
+    keystore:
+      location: "file:./keys/jwt-keystore-2025-09.p12"
+      type: "PKCS12"
+      storepass: ${JWT_KEYSTORE_PASSWORD:storepass}
+      keypass: ${JWT_KEY_PASSWORD:keypass}
+      active-alias: "auth-rs256-2025-09"
+      # 선택: 회전용으로 여러 alias를 두고 모두 JWK에 올리고 싶다면 콤마로 구분
+      aliases: "auth-rs256-2025-09"
+
+auth:
+  clients:
+    textbook:
+      id: textbook
+      secret: ${TEXTBOOK_SECRET:textbook-secret}
+      scopes: read
+    bookstore:
+      id: bookstore
+      secret: ${BOOKSTORE_SECRET:bookstore-secret}
+      scopes: read
+    curriculum:
+      id: curriculum
+      secret: ${CURRICULUM_SECRET:curriculum-secret}
+      scopes: read

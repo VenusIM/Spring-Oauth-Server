@@ -1,0 +1,67 @@
+plugins {
+    id 'java'
+    id 'org.springframework.boot' version '3.3.2'
+    id 'io.spring.dependency-management' version '1.1.5'
+}
+
+group = 'com.example'
+version = '1.0.0'
+
+dependencyManagement {
+    imports { mavenBom 'org.springframework.security:spring-security-bom:6.3.1' }
+}
+
+repositories { mavenCentral() }
+
+dependencies {
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+    implementation 'org.springframework.boot:spring-boot-starter-security'
+    implementation 'org.springframework.boot:spring-boot-starter-jdbc'
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+    implementation 'org.springframework.boot:spring-boot-starter-log4j2'
+    implementation "org.springframework.boot:spring-boot-starter-data-redis"
+    implementation 'org.springframework.security:spring-security-oauth2-authorization-server'
+    implementation 'org.springframework.security:spring-security-oauth2-jose'
+
+    // ===== Querydsl (Jakarta for Spring Boot 3.x) =====
+    implementation 'com.querydsl:querydsl-jpa:5.0.0:jakarta'
+    annotationProcessor 'com.querydsl:querydsl-apt:5.0.0:jakarta'
+    // (일부 환경에서 필요할 수 있는 보조 API - 문제 없으면 생략 가능)
+    annotationProcessor 'jakarta.annotation:jakarta.annotation-api:2.1.1'
+    annotationProcessor 'jakarta.persistence:jakarta.persistence-api:3.1.0'
+    // ================================================
+
+    runtimeOnly "com.mysql:mysql-connector-j"
+    runtimeOnly "org.bgee.log4jdbc-log4j2:log4jdbc-log4j2-jdbc4.1:1.16"
+
+    implementation "com.fasterxml.jackson.datatype:jackson-datatype-jsr310"
+
+    implementation 'org.apache.logging.log4j:log4j-layout-template-json'
+    implementation 'com.lmax:disruptor:3.4.4'
+
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testImplementation 'org.springframework.security:spring-security-test'
+}
+
+configurations.all {
+    exclude group: 'org.springframework.boot', module: 'spring-boot-starter-logging'
+}
+
+tasks.test { useJUnitPlatform() }
+
+// ===== Querydsl Q-클래스 생성 디렉터리 설정 =====
+def querydslGenDir = layout.buildDirectory.dir("generated/querydsl")
+
+tasks.withType(JavaCompile).configureEach {
+    // Q클래스 생성 위치를 커스텀하고 싶을 때만 지정
+    options.generatedSourceOutputDirectory = querydslGenDir.get().asFile
+}
+
+sourceSets {
+    main {
+        java {
+            srcDir(querydslGenDir) // Provider<Directory> 바로 전달 가능
+        }
+    }
+}
+// ================================================

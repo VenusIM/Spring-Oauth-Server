@@ -1,0 +1,52 @@
+server:
+  port: 9000
+
+spring:
+  datasource:
+    hikari:
+      driver-class-name: net.sf.log4jdbc.sql.jdbcapi.DriverSpy
+      jdbc-url: jdbc:log4jdbc:mysql://localhost:1000/test?useSSL=false&serverTimezone=Asia/Seoul&useLegacyDatetimeCode=false
+      username: venusIm
+      password: venusIm!12
+      auto-commit: false
+      connection-test-query: "SELECT 1"
+      keepaliveTime: 30000
+      pool-name: hikari-cp
+      connection-timeout: 30000
+      idle-timeout: 3000000
+      max-lifetime: 3600000
+  jpa:
+    properties:
+      hibernate:
+        jdbc:
+          time_zone: Asia/Seoul
+    hibernate:
+      ddl-auto: none
+    show-sql: true
+  jackson:
+    time-zone: Asia/Seoul
+
+app:
+  access-token-minutes: 10
+  refresh-token-days: 14
+  jwt-secret: supersecrettestkeywhichislongenough
+  seed-cbc-key: "1A 22 35 1B 4F 23 1F 1D 35 33 1F 1A 1B 1C 3A 26"
+  seed-cbc-iv: "2A 2F 2C 6F 3F 4D 4E 29 2A 56 F4 2F 6C 2B AE 08"
+
+logging:
+  config: classpath:log4j2.xml
+
+auth:
+  clients:
+    textbook:
+      id: textbook
+      secret: ${TEXTBOOK_SECRET:textbook-secret}
+      scopes: read
+    bookstore:
+      id: bookstore
+      secret: ${BOOKSTORE_SECRET:bookstore-secret}
+      scopes: read
+    curriculum:
+      id: curriculum
+      secret: ${CURRICULUM_SECRET:curriculum-secret}
+      scopes: read

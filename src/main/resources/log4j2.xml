@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration status="WARN">
+
+    <!-- 로그 출력 -->
+    <Appenders>
+        <!-- Console -->
+        <Console name="Console" target="SYSTEM_OUT">
+            <Filters>
+                <!-- 메시지가 "null" 또는 "" 인 경우 거부 -->
+                <RegexFilter regex="^(null)?$"
+                             onMatch="DENY" onMismatch="NEUTRAL"/>
+            </Filters>
+            <PatternLayout>
+                <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %message%xEx{full}%n</pattern>
+            </PatternLayout>
+        </Console>
+    </Appenders>
+
+    <!-- 로거 -->
+    <Loggers>
+        <Logger name="com.venusim.auth" level="INFO" additivity="false">
+            <AppenderRef ref="Console"/>
+        </Logger>
+        <Logger name="org.springframework" level="INFO" additivity="false">
+            <AppenderRef ref="Console"/>
+        </Logger>
+        <Logger name="org.springframework.boot" level="INFO" additivity="false">
+            <AppenderRef ref="Console"/>
+        </Logger>
+
+        <!-- 보안/JWT 관련은 디버깅 강화 -->
+        <Logger name="org.springframework.security" level="INFO" additivity="false">
+            <AppenderRef ref="Console"/>
+        </Logger>
+        <Logger name="org.springframework.security.oauth2" level="INFO" additivity="false">
+            <AppenderRef ref="Console"/>
+        </Logger>
+        <Logger name="com.nimbusds.jose" level="INFO" additivity="false">
+            <AppenderRef ref="Console"/>
+        </Logger>
+
+        <Logger name="org.hibernate.SQL" level="INFO" additivity="true"/>
+        <Logger name="org.hibernate.orm.jdbc.bind" level="INFO" additivity="true"/>
+        <Logger name="org.hibernate.orm.jdbc.extract" level="INFO" additivity="true"/>
+
+        <Logger name="log4jdbc.log4j2" level="INFO" additivity="false"/>
+        <Logger name="jdbc.audit" level="OFF"/>
+        <Logger name="jdbc.sqlonly" level="INFO"/>
+        <Logger name="jdbc.sqltiming" level="OFF"/>
+        <Logger name="jdbc.resultset" level="INFO"/>
+        <Logger name="jdbc.connection" level="OFF"/>
+
+        <Root level="INFO">
+            <AppenderRef ref="Console"/>
+        </Root>
+    </Loggers>
+</Configuration>
